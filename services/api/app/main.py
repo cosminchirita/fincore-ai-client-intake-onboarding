@@ -3,6 +3,7 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Request, UploadFile, status
@@ -19,8 +20,8 @@ from app.repository import (
     dashboard_kpis,
     get_document_count,
     get_idempotent_response,
-    get_processed_event_lead,
     get_lead,
+    get_processed_event_lead,
     list_dashboard_leads,
     record_workflow_error,
     save_document,
@@ -169,7 +170,10 @@ async def create_intake_form(request: Request):
 
 
 @app.post("/api/v1/intake/{lead_id}/documents", status_code=201)
-async def upload_document(lead_id: UUID, file: UploadFile = File(...)):
+async def upload_document(
+    lead_id: UUID,
+    file: Annotated[UploadFile, File()],
+):
     if not get_lead(lead_id):
         raise HTTPException(status_code=404, detail="Lead not found")
     settings = get_settings()
@@ -288,7 +292,11 @@ def internal_send_email(lead_id: UUID, request: EmailRequest):
     return send_template(request.template, lead)
 
 
-@app.post("/api/v1/internal/workflow-errors", status_code=202, dependencies=[Depends(require_internal_key)])
+@app.post(
+    "/api/v1/internal/workflow-errors",
+    status_code=202,
+    dependencies=[Depends(require_internal_key)],
+)
 def workflow_error(error: WorkflowError):
     record_workflow_error(error)
     logger.error("Workflow failure recorded: %s", error.workflow_name)

@@ -27,8 +27,11 @@ def create_lead(intake: IntakeCreate, audit: dict[str, Any]) -> dict[str, Any]:
             )
             RETURNING *
             """,
-            {**intake.model_dump(exclude={"website"}, mode="python"), "email": str(intake.email),
-             "retention_days": settings.retention_days},
+            {
+                **intake.model_dump(exclude={"website"}, mode="python"),
+                "email": str(intake.email),
+                "retention_days": settings.retention_days,
+            },
         ).fetchone()
         conn.execute(
             """
@@ -38,11 +41,13 @@ def create_lead(intake: IntakeCreate, audit: dict[str, Any]) -> dict[str, Any]:
             {
                 "event_id": event_id,
                 "lead_id": lead["id"],
-                "payload": json.dumps({
-                    "event_id": str(event_id),
-                    "lead_id": str(lead["id"]),
-                    "correlation_id": str(lead["correlation_id"]),
-                }),
+                "payload": json.dumps(
+                    {
+                        "event_id": str(event_id),
+                        "lead_id": str(lead["id"]),
+                        "correlation_id": str(lead["correlation_id"]),
+                    }
+                ),
             },
         )
         conn.execute(
@@ -129,8 +134,13 @@ def save_processing_result(
             INSERT INTO lead_scores (lead_id, score, rules_version, breakdown, risk_flags)
             VALUES (%s, %s, %s, %s::jsonb, %s)
             """,
-            (lead_id, score.score, score.rules_version,
-             json.dumps(score.breakdown.model_dump()), score.risk_flags),
+            (
+                lead_id,
+                score.score,
+                score.rules_version,
+                json.dumps(score.breakdown.model_dump()),
+                score.risk_flags,
+            ),
         )
         conn.execute(
             """
@@ -140,14 +150,20 @@ def save_processing_result(
             ) VALUES (%s, 'service', 'intake-api', 'lead.ai_scored', 'lead', %s,
                       'success', %s::jsonb)
             """,
-            (lead["correlation_id"], str(lead_id), json.dumps({
-                "score": score.score,
-                "rules_version": score.rules_version,
-                "ai_model": model_name,
-                "prompt_version": prompt_version,
-                "event_id": str(event_id) if event_id else None,
-                "decision_is_advisory": True,
-            })),
+            (
+                lead["correlation_id"],
+                str(lead_id),
+                json.dumps(
+                    {
+                        "score": score.score,
+                        "rules_version": score.rules_version,
+                        "ai_model": model_name,
+                        "prompt_version": prompt_version,
+                        "event_id": str(event_id) if event_id else None,
+                        "decision_is_advisory": True,
+                    }
+                ),
+            ),
         )
         if event_id:
             conn.execute(
@@ -175,8 +191,12 @@ def update_lead_status(lead_id: UUID, update: StatusUpdate, actor_id: str) -> di
               outcome, metadata
             ) VALUES (%s, 'user', %s, 'lead.status_changed', 'lead', %s, 'success', %s::jsonb)
             """,
-            (lead["correlation_id"], actor_id, str(lead_id),
-             json.dumps({"status": update.status, "reason": update.reason})),
+            (
+                lead["correlation_id"],
+                actor_id,
+                str(lead_id),
+                json.dumps({"status": update.status, "reason": update.reason}),
+            ),
         )
         return dict(lead)
 
@@ -210,7 +230,10 @@ def save_document(
             INSERT INTO audit_events (actor_type, actor_id, action, resource_type, resource_id, outcome, metadata)
             VALUES ('anonymous', NULL, 'document.uploaded', 'document', %s, 'success', %s::jsonb)
             """,
-            (str(row["id"]), json.dumps({"lead_id": str(lead_id), "sha256": sha256, "size": size_bytes})),
+            (
+                str(row["id"]),
+                json.dumps({"lead_id": str(lead_id), "sha256": sha256, "size": size_bytes}),
+            ),
         )
         return dict(row)
 
@@ -232,8 +255,15 @@ def record_interaction(
               external_message_id, delivery_status
             ) VALUES (%s, 'email', %s, %s, %s, %s, %s, %s)
             """,
-            (lead_id, direction, interaction_type, subject, content_redacted,
-             external_message_id, delivery_status),
+            (
+                lead_id,
+                direction,
+                interaction_type,
+                subject,
+                content_redacted,
+                external_message_id,
+                delivery_status,
+            ),
         )
 
 
@@ -247,8 +277,15 @@ def record_workflow_error(error: WorkflowError) -> None:
               error_code, error_message_redacted, attempt, completed_at
             ) VALUES (%s, %s, %s, 'failed', %s, %s, %s, %s, timezone('utc', now()))
             """,
-            (error.lead_id, error.workflow_name, error.execution_id, error.current_step,
-             error.error_code, redacted, error.attempt),
+            (
+                error.lead_id,
+                error.workflow_name,
+                error.execution_id,
+                error.current_step,
+                error.error_code,
+                redacted,
+                error.attempt,
+            ),
         )
         if error.lead_id:
             conn.execute(
@@ -259,9 +296,7 @@ def record_workflow_error(error: WorkflowError) -> None:
 
 def list_dashboard_leads(limit: int = 200) -> list[dict[str, Any]]:
     with get_pool().connection() as conn:
-        rows = conn.execute(
-            "SELECT * FROM dashboard_leads ORDER BY created_at DESC LIMIT %s", (limit,)
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM dashboard_leads ORDER BY created_at DESC LIMIT %s", (limit,)).fetchall()
         return [dict(row) for row in rows]
 
 
@@ -312,14 +347,19 @@ def retry_outbox_event(event: dict[str, Any], error: str) -> None:
     settings = get_settings()
     attempts = int(event["attempts"])
     status = "dead_letter" if attempts >= settings.outbox_max_attempts else "pending"
-    delay_seconds = min(900, 2 ** attempts)
+    delay_seconds = min(900, 2**attempts)
     with get_pool().connection() as conn, conn.transaction():
         conn.execute(
             """
             UPDATE outbox_events SET status=%s, available_at=%s, last_error_redacted=%s,
               locked_at=NULL, locked_by=NULL WHERE id=%s
             """,
-            (status, datetime.now(UTC) + timedelta(seconds=delay_seconds), error[:500], event["id"]),
+            (
+                status,
+                datetime.now(UTC) + timedelta(seconds=delay_seconds),
+                error[:500],
+                event["id"],
+            ),
         )
 
 
@@ -349,7 +389,6 @@ def save_idempotent_response(key: str, request_hash: str, response_code: int, bo
             """,
             (key, request_hash, response_code, json.dumps(body)),
         )
-
 
 
 def get_processed_event_lead(event_id: UUID) -> dict[str, Any] | None:

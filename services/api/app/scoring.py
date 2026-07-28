@@ -96,8 +96,14 @@ def score_lead(data: ScoringInput, extraction: AILeadExtraction) -> LeadScoreRes
     explanation.append(f"Risk controls contribute {risk_penalty} points.")
 
     raw_score = (
-        completeness + service_fit + volume_fit + urgency_points + industry_fit
-        + document_readiness + commercial_fit + risk_penalty
+        completeness
+        + service_fit
+        + volume_fit
+        + urgency_points
+        + industry_fit
+        + document_readiness
+        + commercial_fit
+        + risk_penalty
     )
     score = max(0, min(100, raw_score))
 

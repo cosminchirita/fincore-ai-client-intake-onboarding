@@ -21,7 +21,7 @@ payload = {
     "message": "We operate an online shop and need accounting, payroll and monthly cash-flow reporting.",
     "consent_privacy": True,
     "consent_marketing": False,
-    "website": ""
+    "website": "",
 }
 
 response = httpx.post(

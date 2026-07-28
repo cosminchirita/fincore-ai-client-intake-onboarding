@@ -42,7 +42,8 @@ def update_status(lead_id: str, new_status: str, reason: str, assigned_to: str |
 
 st.title("FinCore Accounting — Lead Operations")
 st.caption(
-    "Portfolio demo: AI-assisted triage with deterministic scoring, human review, audit logging and synthetic data only."
+    "Portfolio demo: AI-assisted triage with deterministic scoring, "
+    "human review, audit logging and synthetic data only."
 )
 
 try:
@@ -87,9 +88,8 @@ filtered = df[
     & (df["score"].fillna(0) >= min_score)
 ].copy()
 if search:
-    mask = (
-        filtered["company_name"].str.contains(search, case=False, na=False)
-        | filtered["contact_name"].str.contains(search, case=False, na=False)
+    mask = filtered["company_name"].str.contains(search, case=False, na=False) | filtered["contact_name"].str.contains(
+        search, case=False, na=False
     )
     filtered = filtered[mask]
 
@@ -98,8 +98,18 @@ status_counts = filtered.groupby("status", dropna=False).size().rename("leads")
 st.bar_chart(status_counts)
 
 visible_columns = [
-    "id", "created_at", "company_name", "contact_name", "status", "priority", "score",
-    "industry", "urgency", "requested_services", "document_count", "next_action",
+    "id",
+    "created_at",
+    "company_name",
+    "contact_name",
+    "status",
+    "priority",
+    "score",
+    "industry",
+    "urgency",
+    "requested_services",
+    "document_count",
+    "next_action",
 ]
 st.dataframe(
     filtered[[column for column in visible_columns if column in filtered.columns]],
@@ -132,9 +142,7 @@ with left:
     st.write("**Missing information:**", ", ".join(selected.get("missing_information") or []) or "None")
     st.write("**Risk flags:**", ", ".join(selected.get("risk_flags") or []) or "None")
     if selected.get("breakdown"):
-        breakdown = pd.DataFrame(
-            [{"criterion": key, "points": value} for key, value in selected["breakdown"].items()]
-        )
+        breakdown = pd.DataFrame([{"criterion": key, "points": value} for key, value in selected["breakdown"].items()])
         st.dataframe(breakdown, hide_index=True, use_container_width=True)
 with right:
     st.write("**Current status:**", selected["status"])
@@ -145,7 +153,15 @@ with right:
 with st.form("review_form"):
     new_status = st.selectbox(
         "Decision",
-        ["review_required", "awaiting_information", "qualified", "onboarding", "active", "archived", "rejected"],
+        [
+            "review_required",
+            "awaiting_information",
+            "qualified",
+            "onboarding",
+            "active",
+            "archived",
+            "rejected",
+        ],
         index=0,
     )
     assigned_to = st.text_input("Assigned reviewer", value="demo-reviewer@fincore.demo")

@@ -4,7 +4,6 @@ import socket
 import time
 
 import httpx
-
 from app.config import get_settings
 from app.db import close_pool, open_pool
 from app.repository import claim_outbox_events, complete_outbox_event, retry_outbox_event

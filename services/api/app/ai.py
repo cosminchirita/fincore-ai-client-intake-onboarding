@@ -52,8 +52,10 @@ class MockAIProvider(AIProvider):
 
         volume = intake.monthly_document_volume or 0
         complexity = "high" if volume >= 500 or len(services) >= 3 else "medium" if volume >= 100 else "low"
-        next_action = "request_missing_information" if missing else (
-            "schedule_discovery_call" if complexity in {"medium", "high"} else "manual_review"
+        next_action = (
+            "request_missing_information"
+            if missing
+            else ("schedule_discovery_call" if complexity in {"medium", "high"} else "manual_review")
         )
 
         extraction = AILeadExtraction(
@@ -76,11 +78,7 @@ class MockAIProvider(AIProvider):
 def _strict_json_schema(schema: dict[str, Any]) -> dict[str, Any]:
     """Recursively constrain Pydantic JSON Schema for strict structured output."""
     if isinstance(schema, dict):
-        result = {
-            key: _strict_json_schema(value)
-            for key, value in schema.items()
-            if key not in {"default"}
-        }
+        result = {key: _strict_json_schema(value) for key, value in schema.items() if key not in {"default"}}
         if result.get("type") == "object":
             result["additionalProperties"] = False
             properties = result.get("properties", {})

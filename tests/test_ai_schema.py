@@ -2,10 +2,9 @@ import json
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from app.ai import MockAIProvider
 from app.schemas import AILeadExtraction, IntakeCreate
+from pydantic import ValidationError
 
 
 def sample_intake() -> IntakeCreate:
@@ -19,7 +18,7 @@ def sample_intake() -> IntakeCreate:
         annual_revenue_band="1m_5m",
         requested_services=["accounting"],
         urgency="high",
-        message="We run an online shop and need accounting, payroll and cash flow reporting every month.",
+        message=("We run an online shop and need accounting, payroll and cash-flow reporting every month."),
         consent_privacy=True,
         website="",
     )

@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+fincore_ai_onboarding.egg-info/PKG-INFO
+fincore_ai_onboarding.egg-info/SOURCES.txt
+fincore_ai_onboarding.egg-info/dependency_links.txt
+fincore_ai_onboarding.egg-info/requires.txt
+fincore_ai_onboarding.egg-info/top_level.txt
+tests/test_ai_schema.py
+tests/test_email_templates.py
+tests/test_scoring.py
+tests/test_security.py

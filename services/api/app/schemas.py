@@ -27,9 +27,7 @@ class IntakeCreate(BaseModel):
     industry: str | None = Field(default=None, max_length=120)
     employee_count: int | None = Field(default=None, ge=1, le=1_000_000)
     monthly_document_volume: int | None = Field(default=None, ge=0, le=100_000_000)
-    annual_revenue_band: Literal[
-        "unknown", "under_100k", "100k_500k", "500k_1m", "1m_5m", "over_5m"
-    ] = "unknown"
+    annual_revenue_band: Literal["unknown", "under_100k", "100k_500k", "500k_1m", "1m_5m", "over_5m"] = "unknown"
     requested_services: list[ServiceType] = Field(min_length=1, max_length=7)
     urgency: Literal["low", "normal", "high", "critical"] = "normal"
     message: str = Field(min_length=20, max_length=5000)
@@ -115,8 +113,16 @@ class LeadRecord(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: Literal[
-        "received", "processing", "awaiting_information", "qualified",
-        "review_required", "rejected", "onboarding", "active", "archived", "failed"
+        "received",
+        "processing",
+        "awaiting_information",
+        "qualified",
+        "review_required",
+        "rejected",
+        "onboarding",
+        "active",
+        "archived",
+        "failed",
     ]
     assigned_to: str | None = Field(default=None, max_length=160)
     reason: str = Field(min_length=3, max_length=500)
