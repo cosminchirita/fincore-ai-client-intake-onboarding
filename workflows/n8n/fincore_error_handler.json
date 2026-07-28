@@ -1,0 +1,101 @@
+{
+  "name": "FinCore - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "861c92a9-f2c2-4984-b2a1-7fb69ee76232",
+      "name": "Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const execution = $json.execution || {};\nconst workflow = $json.workflow || {};\nconst error = execution.error || $json.error || {};\nconst runData = execution.lastNodeExecuted || null;\nconst leadId = execution.data?.resultData?.runData?.['Lead Received']?.[0]?.data?.main?.[0]?.[0]?.json?.body?.lead_id || null;\nreturn [{json: {\n  lead_id: leadId,\n  workflow_name: workflow.name || 'unknown',\n  execution_id: execution.id ? String(execution.id) : null,\n  current_step: runData,\n  error_code: error.name || 'workflow_error',\n  error_message: String(error.message || 'Unknown workflow failure').slice(0, 1500),\n  attempt: 1\n}}];"
+      },
+      "id": "1bb70159-532a-4ef1-8abc-3201b8fa7156",
+      "name": "Redact Error Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/v1/internal/workflow-errors",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a1993b90-787b-4e1c-91f6-f0aabc5e92cf",
+      "name": "Record Workflow Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1264,
+        -224
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "QglJN3n06SMS3PJ6",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Redact Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redact Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Record Workflow Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "f7c43fe8-e6ac-452b-be30-17ba1e20a8c2",
+  "meta": {
+    "instanceId": "46beb11c8ae6bbece47ff2383ccbe37a3166d2b146d3415ecc86ad51e7065a0d"
+  },
+  "nodeGroups": [],
+  "id": "xNZc117BOVU5WP0H",
+  "tags": []
+}

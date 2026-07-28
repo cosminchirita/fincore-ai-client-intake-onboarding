@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FinCore AI Lead Extraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "industry", "requested_services", "urgency", "complexity", "summary",
+    "missing_information", "next_action", "confidence", "risk_flags"
+  ],
+  "properties": {
+    "industry": {"type": ["string", "null"], "maxLength": 120},
+    "requested_services": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "accounting", "payroll", "tax_advisory", "cash_flow_reporting",
+          "management_reporting", "document_digitization", "other"
+        ]
+      }
+    },
+    "urgency": {"enum": ["low", "normal", "high", "critical"]},
+    "complexity": {"enum": ["low", "medium", "high"]},
+    "summary": {"type": "string", "minLength": 10, "maxLength": 800},
+    "missing_information": {"type": "array", "maxItems": 12, "items": {"type": "string"}},
+    "next_action": {
+      "enum": ["schedule_discovery_call", "request_missing_information", "manual_review"]
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "risk_flags": {"type": "array", "maxItems": 12, "items": {"type": "string"}}
+  }
+}

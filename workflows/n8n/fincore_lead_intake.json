@@ -1,0 +1,155 @@
+{
+  "name": "FinCore - Lead Intake Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fincore-lead-intake",
+        "options": {}
+      },
+      "id": "7a23f83c-7658-4eec-ae6a-7fb4dbf08d1a",
+      "name": "Lead Received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        624,
+        48
+      ],
+      "webhookId": "fincore-lead-intake"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://api:8000/api/v1/internal/leads/{{$json.body.lead_id}}/process?event_id={{$json.body.event_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Actor-Id",
+              "value": "n8n:intake-orchestration"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "id": "942c81dc-7a22-4b4d-9cd6-d3b17ed9efa7",
+      "name": "Process and Score Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        48
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "QglJN3n06SMS3PJ6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $json;\nconst plans = [];\nif (lead.already_processed) return plans;\nif (lead.status === 'qualified') {\n  plans.push({json: {lead_id: lead.id, template: 'qualified'}});\n} else if (lead.status === 'awaiting_information') {\n  plans.push({json: {lead_id: lead.id, template: 'missing_information'}});\n}\nplans.push({json: {lead_id: lead.id, template: 'internal_notification'}});\nreturn plans;"
+      },
+      "id": "090f2062-a070-4022-b4ce-3d7260383494",
+      "name": "Build Notification Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://api:8000/api/v1/internal/leads/{{$json.lead_id}}/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ template: $json.template }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "f0d4c197-4210-4b84-8c27-8fdacfc66306",
+      "name": "Send Planned Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1392,
+        48
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "QglJN3n06SMS3PJ6",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Lead Received": {
+      "main": [
+        [
+          {
+            "node": "Process and Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process and Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Build Notification Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Notification Plan": {
+      "main": [
+        [
+          {
+            "node": "Send Planned Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "xNZc117BOVU5WP0H",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "b061fe61-916b-43b8-b938-b076d81e899f",
+  "meta": {
+    "instanceId": "46beb11c8ae6bbece47ff2383ccbe37a3166d2b146d3415ecc86ad51e7065a0d"
+  },
+  "nodeGroups": [],
+  "id": "lto1ypp88WpS2p98",
+  "tags": []
+}

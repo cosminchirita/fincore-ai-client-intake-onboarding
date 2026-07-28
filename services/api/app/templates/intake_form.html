@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FinCore Accounting — Client Intake</title>
+  <style>
+    :root { font-family: Inter, system-ui, sans-serif; color: #17202a; background: #f4f7f9; }
+    body { margin: 0; }
+    main { max-width: 940px; margin: 40px auto; padding: 0 20px 60px; }
+    .hero, form, .notice { background: white; border: 1px solid #dfe7ec; border-radius: 18px; padding: 28px; box-shadow: 0 8px 28px rgba(20,40,60,.06); }
+    .hero { margin-bottom: 18px; }
+    h1 { margin: 0 0 10px; font-size: clamp(28px, 5vw, 46px); }
+    .muted { color: #5c6b75; line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .full { grid-column: 1 / -1; }
+    label { display: block; font-weight: 650; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid #b9c7d1; border-radius: 9px; font: inherit; }
+    textarea { min-height: 140px; resize: vertical; }
+    fieldset { border: 1px solid #d8e1e7; border-radius: 10px; padding: 14px; }
+    .checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .checks label, .consent label { font-weight: 500; display: flex; gap: 8px; align-items: flex-start; }
+    .checks input, .consent input { width: auto; margin-top: 3px; }
+    button { padding: 13px 22px; border: 0; border-radius: 10px; background: #173f5f; color: white; font-weight: 750; cursor: pointer; }
+    .success { border-left: 5px solid #1b8a5a; margin-bottom: 18px; }
+    .error { border-left: 5px solid #bd3d3a; margin-bottom: 18px; white-space: pre-wrap; }
+    .honeypot { position: absolute; left: -10000px; }
+    @media (max-width: 700px) { .grid, .checks { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>Client intake, without the email ping-pong.</h1>
+    <p class="muted">This is a fictional portfolio demo for FinCore Accounting. It validates a request, creates an auditable record and queues an AI-assisted review. No contract, price or tax decision is made automatically.</p>
+  </section>
+  {% if success %}<section class="notice success"><strong>Request received.</strong><br>Demo lead ID: <code>{{ lead_id }}</code>. Open the dashboard to follow processing.</section>{% endif %}
+  {% if error %}<section class="notice error"><strong>Please review the form.</strong><br>{{ error }}</section>{% endif %}
+  <form method="post" action="/api/v1/intake/form">
+    <div class="grid">
+      <div><label for="contact_name">Contact name</label><input id="contact_name" name="contact_name" required minlength="2"></div>
+      <div><label for="company_name">Company</label><input id="company_name" name="company_name" required minlength="2"></div>
+      <div><label for="email">Business email</label><input id="email" name="email" type="email" required></div>
+      <div><label for="phone">Phone (optional)</label><input id="phone" name="phone"></div>
+      <div><label for="country_code">Country code</label><input id="country_code" name="country_code" value="RO" maxlength="2"></div>
+      <div><label for="industry">Industry</label><input id="industry" name="industry" placeholder="ecommerce, consulting, retail..."></div>
+      <div><label for="employee_count">Employees</label><input id="employee_count" name="employee_count" type="number" min="1"></div>
+      <div><label for="monthly_document_volume">Monthly documents</label><input id="monthly_document_volume" name="monthly_document_volume" type="number" min="0"></div>
+      <div><label for="annual_revenue_band">Annual revenue band</label><select id="annual_revenue_band" name="annual_revenue_band"><option value="unknown">Prefer not to say / unknown</option><option value="under_100k">Under 100k</option><option value="100k_500k">100k–500k</option><option value="500k_1m">500k–1m</option><option value="1m_5m">1m–5m</option><option value="over_5m">Over 5m</option></select></div>
+      <div><label for="urgency">Urgency</label><select id="urgency" name="urgency"><option value="low">Low</option><option value="normal" selected>Normal</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+      <fieldset class="full"><legend>Services requested</legend><div class="checks">
+        <label><input type="checkbox" name="requested_services" value="accounting" checked> Accounting</label>
+        <label><input type="checkbox" name="requested_services" value="payroll"> Payroll</label>
+        <label><input type="checkbox" name="requested_services" value="tax_advisory"> Tax advisory</label>
+        <label><input type="checkbox" name="requested_services" value="cash_flow_reporting"> Cash-flow reporting</label>
+        <label><input type="checkbox" name="requested_services" value="management_reporting"> Management reporting</label>
+        <label><input type="checkbox" name="requested_services" value="document_digitization"> Document digitization</label>
+      </div></fieldset>
+      <div class="full"><label for="message">What do you need?</label><textarea id="message" name="message" required minlength="20" placeholder="Describe the current process, approximate volume and desired outcome."></textarea></div>
+      <div class="full consent">
+        <label><input type="checkbox" name="consent_privacy" required> I consent to processing this fictional demo request. I will not submit real confidential, tax, payroll or identity data.</label>
+        <label><input type="checkbox" name="consent_marketing"> I agree to receive fictional demo updates.</label>
+      </div>
+      <div class="honeypot"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div class="full"><button type="submit">Submit demo request</button></div>
+    </div>
+  </form>
+</main>
+</body>
+</html>

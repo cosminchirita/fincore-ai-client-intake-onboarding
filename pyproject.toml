@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fincore-ai-onboarding"
+version = "0.1.0"
+description = "Auditable AI-assisted client intake and onboarding demo for accounting firms"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "psycopg[binary,pool]>=3.2,<4",
+  "httpx>=0.28,<1",
+  "python-multipart>=0.0.20,<1",
+  "jinja2>=3.1,<4",
+  "email-validator>=2.2,<3",
+  "openai>=1.60,<3",
+  "streamlit>=1.42,<2",
+  "pandas>=2.2,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+  "mypy>=1.14,<2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["services/api", "."]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.setuptools]
+packages = []

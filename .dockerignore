@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+postgres_data
+n8n_data
+uploads
+*.log
+*.zip

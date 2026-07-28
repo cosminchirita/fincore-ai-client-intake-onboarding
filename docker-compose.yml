@@ -1,0 +1,120 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fincore
+      POSTGRES_USER: fincore
+      POSTGRES_PASSWORD: fincore_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./db/migrations/002_security.sql:/docker-entrypoint-initdb.d/002_security.sql:ro
+      - ./db/migrations/003_views.sql:/docker-entrypoint-initdb.d/003_views.sql:ro
+      - ./db/seed/demo_data.sql:/docker-entrypoint-initdb.d/100_demo_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fincore -d fincore"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://fincore:fincore_dev_only@db:5432/fincore
+      SMTP_HOST: mailpit
+      UPLOAD_DIR: /data/uploads
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://fincore:fincore_dev_only@db:5432/fincore
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/fincore-lead-intake
+    
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+      n8n:
+        condition: service_started
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: services/dashboard/Dockerfile
+    env_file: .env
+    environment:
+      API_BASE_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: db
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: fincore
+      DB_POSTGRESDB_USER: fincore
+      DB_POSTGRESDB_PASSWORD: fincore_dev_only
+      DB_POSTGRESDB_SCHEMA: n8n
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL}
+      N8N_SECURE_COOKIE: "false"
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows/n8n:/workflows:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  n8n_data:
+  uploads:

@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+.env
+*.log
+.DS_Store
+uploads/
+.streamlit/secrets.toml
+n8n_data/
+postgres_data/
