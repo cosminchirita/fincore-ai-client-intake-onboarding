@@ -11,3 +11,5 @@ uploads/
 .streamlit/secrets.toml
 n8n_data/
 postgres_data/
+
+*.egg-info/
